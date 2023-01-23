@@ -66,6 +66,7 @@ import {
   GalleryExample,
   HeadersExample,
   ImageExample,
+  ImageStackExample,
   LayoutAnimationExample,
   ManyTagsExample,
   MixedPropsExample,
@@ -362,7 +363,7 @@ const Reanimated2 = () => (
 );
 
 function App(): React.ReactElement {
-  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
+  return <NavigationContainer>{CardExample()}</NavigationContainer>;
 }
 
 export const styles = StyleSheet.create({

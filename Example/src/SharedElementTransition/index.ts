@@ -8,3 +8,4 @@ export * from './ManyTags';
 export * from './MixedProps';
 export * from './ParentMargin';
 export * from './RestoreState';
+export * from './ImageStack';
