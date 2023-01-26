@@ -294,7 +294,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   static REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
   auto subscribeForKeyboardEventsFunction =
-      [](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater) {
+      [](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater, bool isStatusBarTranslucent) {
+        // ignore isStatusBarTranslucent - it's Android only
         return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
           keyboardEventDataUpdater(keyboardState, height);
         }];
@@ -404,11 +405,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 
   [animationsManager setFindSiblingForSharedViewBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
-    int resultTag = weakModule.lock()->layoutAnimationsManager().findSiblingForSharedView([tag intValue]);
-    if (resultTag < 0) {
-      return nil;
+    if (auto reaModule = weakModule.lock()) {
+      int resultTag = reaModule->layoutAnimationsManager().findSiblingForSharedView([tag intValue]);
+      return resultTag == -1 ? nil : @(resultTag);
     }
-    return @(resultTag);
+    return nil;
   }];
 #endif
 
