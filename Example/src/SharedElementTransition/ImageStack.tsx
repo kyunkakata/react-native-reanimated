@@ -1,7 +1,7 @@
 import { ParamListBase } from '@react-navigation/native';
-import { createStackNavigator, StackScreenProps } from '@react-navigation/stack';
+import { StackScreenProps } from '@react-navigation/stack';
 import React from 'react';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   View,
   Text,
@@ -115,7 +115,7 @@ export function ScreenThree({ navigation, route }: StackScreenProps<ParamListBas
               height: 400,
               marginTop: 0,
             }}
-            sharedTransitionTag={`${image}@${index}`}
+            // sharedTransitionTag={`${image}@${index}`}
           />
           <Button onPress={() => navigation.popToTop()} title="Go home"/>
         </View>
@@ -126,7 +126,7 @@ export function ImageStackExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Screen1" component={ScreenOne}/>
-      <Stack.Screen name="Screen2" component={ScreenTwo} options={{stackAnimation: 'none'}} />
+      <Stack.Screen name="Screen2" component={ScreenTwo} options={{animation: 'none'}} />
       <Stack.Screen name="Screen3" component={ScreenThree} />
     </Stack.Navigator>
   );

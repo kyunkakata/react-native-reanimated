@@ -1,16 +1,17 @@
 import * as React from 'react';
-import { View, Image, TouchableNativeFeedback } from 'react-native';
+import { Image, Pressable } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import Animated, {
+  FadeIn,
   runOnJS,
   useAnimatedGestureHandler,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
-import { createStackNavigator, StackScreenProps } from '@react-navigation/stack';
+import { StackScreenProps } from '@react-navigation/stack';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -20,27 +21,11 @@ const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-function Card({
-  navigation,
-  title,
-  transitionTag,
-  isOpen = false,
-  nextScreen,
-}: any) {
-  const goNext = (screenName: string) => {
-    navigation.navigate(screenName, {
-      title: title,
-      sharedTransitionTag: transitionTag,
-    });
-  };
-
+function Card({ title, transitionTag, isOpen = false }: any) {
   return (
-    <TouchableNativeFeedback
-      onPress={() => {
-        goNext(nextScreen);
-      }}>
-      <Animated.View
-          sharedTransitionTag={transitionTag + '8'} style={isOpen ? { flex: 1 } : { flex: 1, }}>
+    <Animated.View
+      sharedTransitionTag={transitionTag + '8'}
+      style={isOpen ? { flex: 1 } : { flex: 1 }}>
       <Animated.View
         style={
           isOpen
@@ -70,22 +55,34 @@ function Card({
           error animi veritatis delectus. Nostrum sapiente distinctio possimus
           vel nam facilis ut?
         </Animated.Text>
-      </Animated.View></Animated.View>
-    </TouchableNativeFeedback>
+      </Animated.View>
+    </Animated.View>
   );
 }
 
 function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
+  const goNext = (screenName: string, title: string, transitionTag: string) => {
+    navigation.navigate(screenName, {
+      title: title,
+      sharedTransitionTag: transitionTag,
+    });
+  };
   return (
     <Animated.ScrollView style={{ flex: 1 /* marginTop: 200 */ }}>
       {[...Array(6)].map((_, i) => (
-        <Card
+        <Pressable
           key={i}
-          navigation={navigation}
-          title={'Mleko' + i}
-          transitionTag={'mleko1' + i}
-          nextScreen="Screen2"
-        />
+          onPress={() => {
+            console.log('Heree');
+            goNext('Screen2', 'Mleko' + i, 'mleko1' + i);
+          }}>
+          <Card
+            navigation={navigation}
+            title={'Mleko' + i}
+            transitionTag={'mleko1' + i}
+            nextScreen="Screen2"
+          />
+        </Pressable>
       ))}
     </Animated.ScrollView>
   );
@@ -95,8 +92,7 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
   const { title, sharedTransitionTag } = route.params as any;
 
   const goNext = () => {
-    console.log("HEre")
-    navigation.navigate("Screen1", {
+    navigation.navigate('Screen1', {
       title,
       sharedTransitionTag,
     });
@@ -106,6 +102,13 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
     x: useSharedValue(0),
     y: useSharedValue(0),
   };
+
+  const dist = useDerivedValue(() => {
+    const xSquared = translation.x.value * translation.x.value;
+    const ySquared = translation.y.value * translation.y.value;
+    return Math.sqrt(xSquared + ySquared);
+  });
+
   type AnimatedGHContext = {
     startX: number;
     startY: number;
@@ -115,21 +118,23 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
     AnimatedGHContext
   >({
     onStart: (_, ctx) => {
+      console.log('onStart');
       ctx.startX = translation.x.value;
       ctx.startY = translation.y.value;
     },
     onActive: (event, ctx) => {
+      console.log('onActive');
       translation.x.value = ctx.startX + event.translationX;
       translation.y.value = ctx.startY + event.translationY;
     },
-    onEnd: (_) => {
-      console.log(translation.x.value, translation.y.value)
-      if (Math.abs(translation.x.value) + Math.abs(translation.y.value) > 150) {
-        console.log('here')
-        runOnJS(goNext)()
-      }
-      translation.x.value = withSpring(0);
-      translation.y.value = withSpring(0);
+    onEnd: (_) => {console.log('onEnd');
+    console.log(translation.x.value, translation.y.value);
+    if (dist.value > 100) {
+      runOnJS(goNext)();
+      return;
+    }
+    translation.x.value = withSpring(0);
+    translation.y.value = withSpring(0);
     },
   });
 
@@ -138,20 +143,22 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
       transform: [
         { translateX: translation.x.value },
         { translateY: translation.y.value },
+        { scale: Math.sqrt(1 - Math.min(0.75, dist.value / 300)) },
       ],
     };
   });
 
   const containerOpacity = useAnimatedStyle(() => {
-    const alpha = 0 // (1 - (Math.abs(translation.x.value)+Math.abs(translation.y.value)) / 150);
+    const alpha =
+      1 - (Math.abs(translation.x.value) + Math.abs(translation.y.value)) / 100;
     return {
-      height: "100%",
-      backgroundColor: `rgba(255, 255, 255, ${alpha})`
-    }
-  })
+      height: '100%',
+      backgroundColor: `rgba(255, 255, 255, ${alpha})`,
+    };
+  });
 
   return (
-    <Animated.View style={containerOpacity}>
+    <Animated.View style={containerOpacity} entering={FadeIn.duration(500)}>
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View style={[{ flex: 1 }, animatedStyle]}>
           <Card
@@ -176,7 +183,7 @@ export function CardExample() {
         // stackAnimation: 'slide_from_right',
         // stackAnimation: 'fade',
         stackAnimation: 'none',
-        // stackPresentation: 'transparentModal',
+        stackPresentation: 'transparentModal'
       }}>
       <Stack.Screen
         name="Screen1"

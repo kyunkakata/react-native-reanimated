@@ -11,7 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   BasicLayoutAnimation,
@@ -50,6 +50,7 @@ import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
 import { PagerExample } from './CustomHandler';
 import { ReactionsCounterExample } from './ReactionsCounterExample';
+import { gestureHandlerRootHOC } from 'react-native-gesture-handler';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
@@ -365,8 +366,10 @@ const Reanimated2 = () => (
   </Stack.Navigator>
 );
 
+const AppWithHandler = gestureHandlerRootHOC(() => <NavigationContainer>{CardExample()}</NavigationContainer>)
+
 function App(): React.ReactElement {
-  return <NavigationContainer>{CardExample()}</NavigationContainer>;
+    return <AppWithHandler />
 }
 
 export const styles = StyleSheet.create({
