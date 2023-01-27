@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Image, Pressable } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import Animated, {
   FadeIn,
   runOnJS,
@@ -10,8 +11,9 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { StackScreenProps } from '@react-navigation/stack';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import {
+  StackScreenProps,
+} from '@react-navigation/stack';
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -21,69 +23,69 @@ const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-function Card({ title, transitionTag, isOpen = false }: any) {
+function Card({
+  title,
+  transitionTag,
+  isOpen = false,
+}: any) {
   return (
     <Animated.View
-      sharedTransitionTag={transitionTag + '8'}
-      style={isOpen ? { flex: 1 } : { flex: 1 }}>
-      <Animated.View
-        style={
-          isOpen
-            ? { height: 500, marginTop: 50, backgroundColor: 'green' }
-            : { height: 120, marginTop: 20, backgroundColor: 'blue' }
-        }
-        sharedTransitionTag={transitionTag + '1'}>
-        <Animated.Text
-          sharedTransitionTag={transitionTag + '2'}
-          style={{ width: '100%', height: 20 }}>
-          {title}
-        </Animated.Text>
-        <AnimatedImage
-          sharedTransitionTag={transitionTag + '3'}
-          source={photo}
-          style={{ width: '100%', height: isOpen ? 300 : 100 }}
-        />
-        {/* <Animated.View
+      style={
+        isOpen
+          ? { height: 500, marginTop: 50, backgroundColor: 'green' }
+          : { height: 120, marginTop: 20, backgroundColor: 'green' }
+      }
+      sharedTransitionTag={transitionTag + '1'}>
+      <Animated.Text
+        sharedTransitionTag={transitionTag + '2'}
+        style={{ width: '100%', height: 20 }}>
+        {title}
+      </Animated.Text>
+      <AnimatedImage
+        sharedTransitionTag={transitionTag + '3'}
+        source={photo}
+        style={{ width: '100%', height: isOpen ? 300 : 100 }}
+      />
+      {/* <Animated.View
         sharedTransitionTag={transitionTag + "3"}
         style={{ width: '100%', borderWidth: 5, backgroundColor: isOpen ? 'olive' : 'purple', height: isOpen ? 200 : 100 }}
       /> */}
-        <Animated.Text
-          sharedTransitionTag={transitionTag + '4'}
-          style={{ width: '100%', height: isOpen ? 100 : 0 }}>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid,
-          earum non, dignissimos fugit rerum exercitationem ab consequatur,
-          error animi veritatis delectus. Nostrum sapiente distinctio possimus
-          vel nam facilis ut?
-        </Animated.Text>
-      </Animated.View>
+      <Animated.Text
+        sharedTransitionTag={transitionTag + '4'}
+        style={{ width: '100%', height: isOpen ? 100 : 0 }}>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid,
+        earum non, dignissimos fugit rerum exercitationem ab consequatur, error
+        animi veritatis delectus. Nostrum sapiente distinctio possimus vel nam
+        facilis ut?
+      </Animated.Text>
     </Animated.View>
   );
 }
 
 function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
-  const goNext = (screenName: string, title: string, transitionTag: string) => {
-    navigation.navigate(screenName, {
-      title: title,
-      sharedTransitionTag: transitionTag,
-    });
-  };
   return (
     <Animated.ScrollView style={{ flex: 1 /* marginTop: 200 */ }}>
-      {[...Array(6)].map((_, i) => (
-        <Pressable
-          key={i}
-          onPress={() => {
-            console.log('Heree');
-            goNext('Screen2', 'Mleko' + i, 'mleko1' + i);
-          }}>
-          <Card
-            navigation={navigation}
-            title={'Mleko' + i}
-            transitionTag={'mleko1' + i}
-            nextScreen="Screen2"
-          />
-        </Pressable>
-      ))}
+      {[...Array(6)].map((_, i) => {
+        const title = 'Mleko' + i;
+        const transitionTag = 'mleko1' + i;
+
+        const goNext = () => {
+          navigation.navigate('Screen2', {
+            title,
+            sharedTransitionTag: transitionTag,
+          });
+        };
+        return (
+          <Pressable key={i} onPress={goNext}>
+            <Card
+              navigation={navigation}
+              title={title}
+              transitionTag={transitionTag}
+              nextScreen="Screen2"
+            />
+          </Pressable>
+        );
+      })}
     </Animated.ScrollView>
   );
 }
@@ -118,23 +120,19 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
     AnimatedGHContext
   >({
     onStart: (_, ctx) => {
-      console.log('onStart');
       ctx.startX = translation.x.value;
       ctx.startY = translation.y.value;
     },
     onActive: (event, ctx) => {
-      console.log('onActive');
       translation.x.value = ctx.startX + event.translationX;
       translation.y.value = ctx.startY + event.translationY;
     },
-    onEnd: (_) => {console.log('onEnd');
-    console.log(translation.x.value, translation.y.value);
-    if (dist.value > 100) {
-      runOnJS(goNext)();
-      return;
-    }
-    translation.x.value = withSpring(0);
-    translation.y.value = withSpring(0);
+    onEnd: (_) => {
+      if (dist.value > 150) {
+        runOnJS(goNext)();
+      }
+      translation.x.value = withSpring(0);
+      translation.y.value = withSpring(0);
     },
   });
 
@@ -143,14 +141,13 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
       transform: [
         { translateX: translation.x.value },
         { translateY: translation.y.value },
-        { scale: Math.sqrt(1 - Math.min(0.75, dist.value / 300)) },
+        { scale: Math.sqrt(1 - Math.min(0.75, dist.value / 150)) },
       ],
     };
   });
 
   const containerOpacity = useAnimatedStyle(() => {
-    const alpha =
-      1 - (Math.abs(translation.x.value) + Math.abs(translation.y.value)) / 100;
+    const alpha = Math.max(1 - dist.value / 150, 0);
     return {
       height: '100%',
       backgroundColor: `rgba(255, 255, 255, ${alpha})`,
@@ -162,11 +159,9 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View style={[{ flex: 1 }, animatedStyle]}>
           <Card
-            navigation={navigation}
             title={title}
             transitionTag={sharedTransitionTag}
             isOpen={true}
-            nextScreen="Screen1"
           />
         </Animated.View>
       </PanGestureHandler>
@@ -183,7 +178,7 @@ export function CardExample() {
         // stackAnimation: 'slide_from_right',
         // stackAnimation: 'fade',
         stackAnimation: 'none',
-        stackPresentation: 'transparentModal'
+        stackPresentation: 'transparentModal',
       }}>
       <Stack.Screen
         name="Screen1"
