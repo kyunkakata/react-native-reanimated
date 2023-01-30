@@ -10,7 +10,6 @@ import Animated, {
 import { Text, View, ViewStyle, useWindowDimensions } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
-    FlingGestureHandler,
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
@@ -60,7 +59,7 @@ const Card: React.FC<{
         { translateY: translation.y.value },
         { scale },
       ],
-      borderRadius: 2*(1-scale) *  borderRadius / scale
+      borderRadius: (2 * (1 - scale) * borderRadius) / scale,
     };
   });
 
@@ -108,21 +107,17 @@ const Card: React.FC<{
 
   return (
     <>
-          {expanded && <Animated.View
-            style={
-              [collapsedStyle, {opacity: 0}]
-            }>
-          </Animated.View>}
-            <PanGestureHandler onGestureEvent={gestureHandler}>
-          <Animated.View
-            onTouchEnd={() => setExpanded(true)}
-            style={
-              expanded ? [expandedStyle, dragStyle] : collapsedStyle
-            }
-            layout={Layout}>
-            <Text style={{textAlign: 'center'}}>{text}</Text>
-          </Animated.View>
-        </PanGestureHandler>
+      {expanded && (
+        <Animated.View style={[collapsedStyle, { opacity: 0 }]}></Animated.View>
+      )}
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View
+          onTouchEnd={() => setExpanded(true)}
+          style={expanded ? [expandedStyle, dragStyle] : collapsedStyle}
+          layout={Layout}>
+          <Text style={{ textAlign: 'center' }}>{text}</Text>
+        </Animated.View>
+      </PanGestureHandler>
     </>
   );
 };
@@ -136,7 +131,7 @@ const Screen = () => {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-evenly',
-        paddingTop: 64
+        paddingTop: 64,
       }}>
       <Card text="Bla1" />
       <Card text="Bla2" />

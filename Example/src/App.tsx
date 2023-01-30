@@ -72,6 +72,7 @@ import {
   MixedPropsExample,
   ParentMarginExample,
   RestoreStateExample,
+  TransitionWithLayoutExample,
 } from './SharedElementTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
@@ -85,6 +86,14 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  TransitionWithLayout: {
+    screen: TransitionWithLayoutExample,
+    title: '⚠️ [SET] Transition with layout animations',
+  },
+  ImageStack: {
+    screen: ImageStackExample,
+    title: '⚠️ [SET] ImageStackExample',
+  },
   CardExample: {
     screen: CardExample,
     title: '⚠️ [SET] CardExample',
@@ -366,7 +375,7 @@ const Reanimated2 = () => (
   </Stack.Navigator>
 );
 
-const AppWithHandler = gestureHandlerRootHOC(() => <NavigationContainer>{CardExample()}</NavigationContainer>)
+const AppWithHandler = gestureHandlerRootHOC(() => <NavigationContainer>{Reanimated2()}</NavigationContainer>)
 
 function App(): React.ReactElement {
     return <AppWithHandler />
