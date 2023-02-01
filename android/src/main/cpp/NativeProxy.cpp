@@ -63,6 +63,11 @@ NativeProxy::NativeProxy(
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
+
+  // cleanup all animated sensors here, since NativeProxy
+  // has already been destroyed when AnimatedSensorModule's
+  // destructor is ran
+  _nativeReanimatedModule->cleanupSensors();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -374,13 +379,15 @@ void NativeProxy::installJSIBindings(
             tag);
       });
 
-  layoutAnimations->cthis()->setFindSiblingForSharedView([weakModule](int tag) {
-    if (auto module = weakModule.lock()) {
-      return module->layoutAnimationsManager().findSiblingForSharedView(tag);
-    } else {
-      return -1;
-    }
-  });
+  layoutAnimations->cthis()->setFindPrecedingViewTagForTransition(
+      [weakModule](int tag) {
+        if (auto module = weakModule.lock()) {
+          return module->layoutAnimationsManager()
+              .findPrecedingViewTagForTransition(tag);
+        } else {
+          return -1;
+        }
+      });
 
   rt.global().setProperty(
       rt,

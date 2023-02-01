@@ -2,7 +2,9 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
 
-#if __has_include(<RNScreens/RNSScreen.h>)
+#define LOAD_SCREENS_HEADERS ((!RCT_NEW_ARCH_ENABLED && __has_include(<RNScreens/RNSScreen.h>)) || (RCT_NEW_ARCH_ENABLED && __has_include(<RNScreens/RNSScreen.h>) && __cplusplus))
+
+#if LOAD_SCREENS_HEADERS
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSScreenStack.h>
 #endif
@@ -12,7 +14,7 @@
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
   NSMutableDictionary<NSNumber *, UIView *> *_currentSharedTransitionViews;
-  REAFindSiblingForSharedViewBlock _findSiblingForSharedView;
+  REAFindPrecedingViewTagForTransitionBlock _findPrecedingViewTagForTransition;
   UIView *_transitionContainer;
   NSMutableArray<UIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
@@ -112,13 +114,13 @@
     }
 
     // find sibling for shared view
-    NSNumber *siblingViewTag = _findSiblingForSharedView(sharedView.reactTag);
+    NSNumber *siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
     UIView *siblingView = nil;
     do {
       siblingView = [_animationManager viewForTag:siblingViewTag];
       if (siblingView == nil) {
         [self clearAllSharedConfigsForViewTag:siblingViewTag];
-        siblingViewTag = _findSiblingForSharedView(sharedView.reactTag);
+        siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
       }
     } while (siblingView == nil && siblingViewTag != nil);
 
@@ -200,7 +202,7 @@
 
 - (UIView *)getScreenForView:(UIView *)view
 {
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if LOAD_SCREENS_HEADERS
   UIView *screen = view;
   while (![screen isKindOfClass:[RNSScreenView class]] && screen.superview != nil) {
     screen = screen.superview;
@@ -214,7 +216,7 @@
 
 - (UIView *)getStackForView:(UIView *)view
 {
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if LOAD_SCREENS_HEADERS
   if ([view isKindOfClass:[RNSScreenView class]]) {
     if (view.reactSuperview != nil) {
       if ([view.reactSuperview isKindOfClass:[RNSScreenStackView class]]) {
@@ -234,7 +236,7 @@
 
 - (void)observeChanges:(UIView *)view
 {
-  if ([_screenHasObserver containsObject:view.reactTag]) {
+  if (view == nil || [_screenHasObserver containsObject:view.reactTag]) {
     return;
   }
   [_screenHasObserver addObject:view.reactTag];
@@ -263,7 +265,7 @@
   IMP originalImp = method_getImplementation(originalMethod);
   IMP swizzledImp = method_getImplementation(swizzledMethod);
   class_replaceMethod(originalClass, swizzledSelector, originalImp, method_getTypeEncoding(originalMethod));
-  class_replaceMethod(originalClass, originalSelector, swizzledImp, method_getTypeEncoding(swizzledSelector));
+  class_replaceMethod(originalClass, originalSelector, swizzledImp, method_getTypeEncoding(swizzledMethod));
 }
 
 - (void)swizzled_viewDidLayoutSubviews
@@ -532,9 +534,10 @@
   }
 }
 
-- (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView
+- (void)setFindPrecedingViewTagForTransitionBlock:
+    (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition
 {
-  _findSiblingForSharedView = findSiblingForSharedView;
+  _findPrecedingViewTagForTransition = findPrecedingViewTagForTransition;
 }
 
 - (void)clearAllSharedConfigsForViewTag:(NSNumber *)viewTag
