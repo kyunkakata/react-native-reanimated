@@ -26,6 +26,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
     const jsi::Value &sensorTypeValue,
     const jsi::Value &interval,
+    const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
@@ -33,7 +34,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
   auto uiRuntime = runtimeHelper->uiRuntime();
 
   int sensorId = platformRegisterSensorFunction_(
-      sensorType, interval.asNumber(), [=](double newValues[]) {
+      sensorType, interval.asNumber(), iosReferenceFrame.asNumber(), [=](double newValues[], int orientationDegrees) {
         jsi::Runtime &rt = *uiRuntime;
         auto handler =
             shareableHandler->getJSValue(rt).asObject(rt).asFunction(rt);
@@ -46,13 +47,13 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(rt, "yaw", newValues[4]);
           value.setProperty(rt, "pitch", newValues[5]);
           value.setProperty(rt, "roll", newValues[6]);
-          handler.call(rt, value);
+          handler.call(rt, value, orientationDegrees);
         } else {
           jsi::Object value(rt);
           value.setProperty(rt, "x", newValues[0]);
           value.setProperty(rt, "y", newValues[1]);
           value.setProperty(rt, "z", newValues[2]);
-          handler.call(rt, value);
+          handler.call(rt, value, orientationDegrees);
         }
       });
   if (sensorId != -1) {

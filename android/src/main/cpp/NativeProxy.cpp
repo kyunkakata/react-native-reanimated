@@ -180,7 +180,7 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto registerSensorFunction =
-      [this](int sensorType, int interval, std::function<void(double[])> setter)
+      [this](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter)
       -> int {
     return this->registerSensor(sensorType, interval, std::move(setter));
   };
@@ -483,7 +483,7 @@ void NativeProxy::synchronouslyUpdateUIProps(
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
-    std::function<void(double[])> setter) {
+    std::function<void(double[], int)> setter) {
   static auto method =
       javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
           "registerSensor");
