@@ -37,8 +37,6 @@ NativeProxy::NativeProxy(
       scheduler_(scheduler),
       layoutAnimations(std::move(_layoutAnimations)) {}
 
-}
-
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
