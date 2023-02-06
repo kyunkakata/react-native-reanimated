@@ -360,8 +360,13 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
             new Runnable() {
               @Override
               public void run() {
-                toBeRemovedChildren.remove(view);
-                viewGroupManager.removeView(viewGroup, view);
+                try {
+                  toBeRemovedChildren.remove(view);
+                  viewGroupManager.removeView(viewGroup, view);
+                } catch (IndexOutOfBoundsException e) {
+                  e.printStackTrace();
+                }
+                
               } // It's far from optimal but let's leave it as it is for now
             });
       }
